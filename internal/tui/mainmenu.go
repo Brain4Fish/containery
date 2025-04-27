@@ -21,6 +21,7 @@ func mainMenuForm() {
 			huh.NewOption("🔁 Transfer Images", "transfer"),
 			huh.NewOption("🗂️ Manage Registries", "registries"),
 			huh.NewOption("🔐 Auth & Credentials", "auth"),
+			huh.NewOption("🕓 Transfer History", "history"),
 			huh.NewOption("⚙️ Settings", "settings"),
 			huh.NewOption("❌ Exit", "exit"),
 		).
@@ -40,7 +41,7 @@ func mainMenuForm() {
 func mainMenuSelector(selector string) {
 	switch selector {
 	case "transfer":
-		fmt.Println("transfer")
+		TransferMenu()
 	case "registries":
 		fmt.Println("registries")
 	case "auth":
