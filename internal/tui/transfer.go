@@ -32,7 +32,7 @@ func transferMenuForm() {
 			huh.NewOption("[🧹] Clear All Selections", "clear"),
 			huh.NewOption("[💾] Save Image List", "save"),
 			huh.NewOption("[🚀] Start Transfer", "start"),
-			huh.NewOption("[←] Back", "back"),
+			huh.NewOption("[⬅️] Back", "back"),
 		).
 		Value(&actionItem).
 		WithWidth(100)
