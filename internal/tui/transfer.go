@@ -2,26 +2,30 @@ package tui
 
 import (
 	"fmt"
+	"github.com/Brain4Fish/containery/internal/db"
 	"github.com/Brain4Fish/containery/internal/utils"
 	"github.com/charmbracelet/huh"
 	"log"
 )
+
+type imageParams struct {
+	id       string
+	name     string
+	selected bool
+}
 
 func TransferMenu() {
 	utils.CleanScreen()
 	transferMenuForm()
 }
 
+// Stopped here. I must implement
 func transferMenuForm() {
-	var transferItems []string
+	var transferItems []imageParams
 	actionItem := ""
-	transferSelector := huh.NewMultiSelect[string]().
+	transferSelector := huh.NewMultiSelect[imageParams]().
 		Title("=== Transfer Menu ===").
-		Options(
-			huh.NewOption("keke", "ololo"),
-			huh.NewOption("keke1", "ololo1"),
-			huh.NewOption("keke2", "ololo2"),
-		).
+		Options(optionsList()...).
 		Value(&transferItems).
 		WithWidth(100)
 
@@ -46,7 +50,7 @@ func transferMenuForm() {
 	transferMenuSelector(transferItems, actionItem)
 }
 
-func transferMenuSelector(selectedValues []string, action string) {
+func transferMenuSelector(selectedValues []imageParams, action string) {
 	switch action {
 	case "new":
 		fmt.Println("new ", selectedValues)
@@ -60,4 +64,17 @@ func transferMenuSelector(selectedValues []string, action string) {
 		fmt.Println("back ", selectedValues)
 		RenderedMenu() // Going back to main menu
 	}
+}
+
+func optionsList() []huh.Option[imageParams] {
+	dbConn := db.Database{DatabasePath: "settings.db"}
+	dbConn.CreateConnection()
+	rows, _ := dbConn.ReadData()
+	var images []huh.Option[imageParams]
+	for _, row := range rows {
+		image := imageParams{id: row.ID, name: fmt.Sprintf("%s:%s", row.Name, row.Tag), selected: row.Selected}
+		option := huh.NewOption[imageParams](image.name, image).Selected(row.Selected)
+		images = append(images, option)
+	}
+	return images
 }
