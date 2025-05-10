@@ -12,6 +12,7 @@ type Image struct {
 	ID       string
 	Name     string
 	Tag      string
+	Source   string
 	Selected bool
 }
 
@@ -27,22 +28,49 @@ func (db *Database) dbFileExists() bool {
 }
 
 func (db *Database) initDatabase() {
-	query := `CREATE TABLE IF NOT EXISTS images (
+	queries := []string{`CREATE TABLE IF NOT EXISTS images (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT NOT NULL,
 			tag TEXT NOT NULL,
+			source TEXT NOT NULL,
+			destination INTEGER NOT NULL,
 			selected BOOLEAN DEFAULT FALSE,
-			UNIQUE(name, tag)
-    	);`
-	_, err := db.Connection.Exec(query)
-	if err != nil {
-		log.Fatal("There is an error on DB initialization: ", err)
+			UNIQUE(name, tag),
+			FOREIGN KEY (destination) REFERENCES destinations(id) ON DELETE CASCADE
+    	);`,
+		`CREATE TABLE IF NOT EXISTS destinations (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL UNIQUE,
+			url TEXT NOT NULL,
+			authtype INTEGER NOT NULL,
+			credentials INTEGER,
+            FOREIGN KEY (authtype) REFERENCES auth_types(id) ON DELETE CASCADE,
+            FOREIGN KEY (credentials) REFERENCES credentials(id) ON DELETE CASCADE
+    	);`,
+		`CREATE TABLE IF NOT EXISTS auth_types (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			type TEXT NOT NULL UNIQUE
+    	);`,
+		`CREATE TABLE IF NOT EXISTS credentials (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			username TEXT NOT NULL UNIQUE,
+			password TEXT
+    	);`,
+	}
+	for _, query := range queries {
+		if _, err := db.Connection.Exec(query); err != nil {
+			log.Fatal("There is an error on DB initialization: ", err)
+		}
 	}
 	// Sample data below
 	sampleData := []string{
-		`INSERT INTO images (name, tag) VALUES ('nginx', 'latest');`,
-		`INSERT INTO images (name, tag) VALUES ('nginx', '1.28');`,
-		`INSERT INTO images (name, tag, selected) VALUES ('httpd', '2.4', true);`,
+		`INSERT INTO auth_types (id, type) VALUES (1, 'anonymous'), (2, 'password');`,
+		`INSERT INTO credentials (id, username, password) VALUES (1, 'support', 'testpass');`,
+		`INSERT INTO destinations (id, name, url, authtype, credentials) VALUES (1, 'adm_gitlab', 'gitlab.adm-systems.tech:5050', 2, 1);`,
+		`INSERT INTO destinations (id, name, url, authtype) VALUES (2, 'docker.io', 'docker.io', 1);`,
+		`INSERT INTO images (name, tag, source, destination) VALUES ('nginx', 'latest', 'docker.local', 1);`,
+		`INSERT INTO images (name, tag, source, destination) VALUES ('nginx', '1.28', 'docker.local', 2);`,
+		`INSERT INTO images (name, tag, source, destination, selected) VALUES ('httpd', '2.4', 'docker.local', 2, true);`,
 	}
 	for _, query := range sampleData {
 		if _, err := db.Connection.Exec(query); err != nil {
