@@ -45,7 +45,7 @@ func mainMenuSelector(selector string) {
 	case "registries":
 		fmt.Println("registries")
 	case "auth":
-		fmt.Println("auth")
+		RenderedAuthMenu()
 	case "settings":
 		fmt.Println("settings")
 	default:

@@ -16,6 +16,12 @@ type Image struct {
 	Selected bool
 }
 
+type Credentials struct {
+	ID       uint
+	Username string
+	Password string
+}
+
 type Database struct {
 	Connection   *sql.DB
 	DatabasePath string `default:"settings.db"`
@@ -66,6 +72,7 @@ func (db *Database) initDatabase() {
 	sampleData := []string{
 		`INSERT INTO auth_types (id, type) VALUES (1, 'anonymous'), (2, 'password');`,
 		`INSERT INTO credentials (id, username, password) VALUES (1, 'support', 'testpass');`,
+		`INSERT INTO credentials (id, username, password) VALUES (2, 'newuser', 'testpass1');`,
 		`INSERT INTO destinations (id, name, url, authtype, credentials) VALUES (1, 'adm_gitlab', 'gitlab.adm-systems.tech:5050', 2, 1);`,
 		`INSERT INTO destinations (id, name, url, authtype) VALUES (2, 'docker.io', 'docker.io', 1);`,
 		`INSERT INTO images (name, tag, source, destination) VALUES ('nginx', 'latest', 'docker.local', 1);`,
@@ -91,10 +98,10 @@ func (db *Database) CreateConnection() {
 	}
 }
 
-func (db *Database) ReadData() ([]Image, error) {
+func (db *Database) ReadImagesData() ([]Image, error) {
 	rows, err := db.Connection.Query("SELECT id, name, tag, selected FROM images")
 	if err != nil {
-		log.Fatal("There is an error in select query: ", err)
+		log.Fatal("There is an error in image select query: ", err)
 	}
 	defer rows.Close()
 
@@ -110,4 +117,25 @@ func (db *Database) ReadData() ([]Image, error) {
 	}
 	fmt.Print(images)
 	return images, nil
+}
+
+func (db *Database) ReadCredentialsData() ([]Credentials, error) {
+	rows, err := db.Connection.Query("SELECT id, username, password FROM credentials")
+	if err != nil {
+		log.Fatal("There is an error in credentials select query: ", err)
+	}
+	defer rows.Close()
+
+	var credsList []Credentials
+	for rows.Next() {
+		var cred Credentials
+		err = rows.Scan(&cred.ID, &cred.Username, &cred.Password)
+		if err != nil {
+			log.Fatal("Can't map credentials data from select: ", err)
+			return nil, err
+		}
+		credsList = append(credsList, cred)
+	}
+	fmt.Print(credsList)
+	return credsList, nil
 }

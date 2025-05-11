@@ -69,7 +69,7 @@ func transferMenuSelector(selectedValues []imageParams, action string) {
 func optionsList() []huh.Option[imageParams] {
 	dbConn := db.Database{DatabasePath: "settings.db"}
 	dbConn.CreateConnection()
-	rows, _ := dbConn.ReadData()
+	rows, _ := dbConn.ReadImagesData()
 	var images []huh.Option[imageParams]
 	for _, row := range rows {
 		image := imageParams{id: row.ID, name: fmt.Sprintf("%s:%s", row.Name, row.Tag), selected: row.Selected}
